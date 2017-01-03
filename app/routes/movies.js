@@ -9,6 +9,11 @@ var url = ('mongodb://localhost:27017/store');
 //creating a get method
 //routing allows to give users access to different types of data, and can pass along information to the routes through the params variable of the request object
 
+//findOne - returns a single document from the moviecollection
+//req.params.id - this property is an object containing properties mapped to the route parameters
+//where _id is equal to ObjectId - since it is stored in database we required object id in the top
+//req.params.id - pass in the id that is passed in the url
+
 // -------------------- GET (READ) - GET ALL MOVIES  -------------------- //
 
 //response to a get request to the /movies route
@@ -17,16 +22,28 @@ router.get('/movies', function(req, res) {
     //connecting to the mongodb
     MongoClient.connect(url, function(err, db) {
 
-        //using the movie collection and store it a variable called collection
+        //status code 500 - external server error.
+        if (err) {
+            res.status(500);
+        }
+
+        //using the movie collection
         var movieCollection = db.collection('movies');
 
         //find - returns an array of documents from the moviecollection
-        movieCollection.find().toArray(function(err, data) {
+        movieCollection.find().toArray(function(err, movies) {
 
-            //sending back the information as json data
-            res.json(data);
-            db.close();
+            //response with an error if there is any
+            if (err)
+            {
+                res.send(err);
+            }
+
+            //else response with json format
+            res.json(movies);
         });
+
+        db.close();
     });
 });
 
@@ -41,12 +58,21 @@ router.get('/movies/:id', function(req, res) {
         //using the movie collection
         var movieCollection = db.collection('movies');
 
-        //findOne - returns a single document from the moviecollection
-        movieCollection.findOne({'_id' : ObjectId(req.params.id)}, function(err, data) {
+        //matches the objectId with the id passed in the url
+        //return single movie where _id is equal to ObjectId from mongodb and pass in the id that is passed in the url
+        movieCollection.findOne({'_id' : ObjectId(req.params.id)}, function(err, movie) {
 
-            res.send(data);
-            db.close();
+            //response with an error if there is any
+            if (err)
+            {
+                res.send(err);
+            }
+
+            //response with json format
+            res.json(movie);
         });
+
+        db.close();
     });
 });
 
@@ -61,12 +87,22 @@ router.post('/movies', function(req, res) {
         //using the movie collection
         var movieCollection = db.collection('movies');
 
-        //insert - creates a new document in the moviecollection
-        movieCollection.insert(req.body, function(err, data) { //req.body - contains key-value pairs of data submitted in the request body.
+        //req.body - contains key-value pairs of data submitted in form.
+        var movie = req.body;
 
-            res.send({"msg" : "Movie created"});
-            db.close();
+        movieCollection.insert(movie, function(err, movie) {
+
+            //response with an error if there is any
+            if (err)
+            {
+                res.send(err);
+            }
+
+            //response with json format
+            res.json({"message": "movie created"});
         });
+
+        db.close();
     });
 });
 
@@ -82,15 +118,26 @@ router.put('/movies/:id', function(req, res) {
         //using the movie collection
         var movieCollection = db.collection('movies');
 
+        //so it updates correctly
         delete req.body._id;
 
-        //update - modifies an existing document in the moviecollection
-        movieCollection.update({'_id' : ObjectId(req.params.id)}, req.body, function(err, data) {
+        //req.body - contains key-value pairs of data submitted in the form.
+        var movie = req.body;
 
-            //send a message that the movie is updated
-            res.send({"msg" : "Movie updated"});
-            db.close();
+        //update single movie where _id is equal to ObjectId from mongodb and pass in the id that is passed in the url
+        movieCollection.update({'_id' : ObjectId(req.params.id)}, movie, function(err, movie) {
+
+            //response with an error if there is any
+            if (err)
+            {
+                res.send(err);
+            }
+
+            //response with json format
+            res.json({"message": "movie updated"});
         });
+
+        db.close();
     });
 });
 
@@ -105,10 +152,18 @@ router.delete('/movies/:id', function(req, res) {
         //using the movie collection
         var movieCollection = db.collection('movies');
 
-        //remove a single document from the moviecollection
-        movieCollection.remove({'_id' : ObjectId(req.params.id)}, function(err, data) {
+        //remove single movie where _id is equal to ObjectId from mongodb and pass in the id that is passed in the url
+        movieCollection.remove({'_id' : ObjectId(req.params.id)}, function(err, movie) {
 
-            res.send({"msg" : "Movie deleted"});
+            //response with an error if there is any
+            if (err)
+            {
+                res.send(err);
+            }
+
+            //response with json format
+            res.json({"message": "movie deleted"});
+
             db.close();
         });
     });
