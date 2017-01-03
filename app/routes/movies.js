@@ -4,16 +4,6 @@ var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
 var url = ('mongodb://localhost:27017/store');
 
-//server taking care of handling request (req) for data and then returning some information (res)
-//passed along variable req - has a params object - any variables that we pass along through the url
-//creating a get method
-//routing allows to give users access to different types of data, and can pass along information to the routes through the params variable of the request object
-
-//findOne - returns a single document from the moviecollection
-//req.params.id - this property is an object containing properties mapped to the route parameters
-//where _id is equal to ObjectId - since it is stored in database we required object id in the top
-//req.params.id - pass in the id that is passed in the url
-
 // -------------------- GET (READ) - GET ALL MOVIES  -------------------- //
 
 //response to a get request to the /movies route
@@ -22,15 +12,14 @@ router.get('/movies', function(req, res) {
     //connecting to the mongodb
     MongoClient.connect(url, function(err, db) {
 
-        //status code 500 - external server error.
         if (err) {
-            res.status(500);
+            res.status(500); //external server error.
         }
 
         //using the movie collection
         var movieCollection = db.collection('movies');
 
-        //find - returns an array of documents from the moviecollection
+        //find - returns an array of movies
         movieCollection.find().toArray(function(err, movies) {
 
             //response with an error if there is any
@@ -39,7 +28,7 @@ router.get('/movies', function(req, res) {
                 res.send(err);
             }
 
-            //else response with json format
+            //response with json format
             res.json(movies);
         });
 
@@ -52,14 +41,13 @@ router.get('/movies', function(req, res) {
 //response to a get request to the /movies/:id route
 router.get('/movies/:id', function(req, res) {
 
-    //connecting to the mongodb
+    //connecting to the mongodb and executes a callback function when connected
     MongoClient.connect(url, function(err, db) {
 
         //using the movie collection
         var movieCollection = db.collection('movies');
 
-        //matches the objectId with the id passed in the url
-        //return single movie where _id is equal to ObjectId from mongodb and pass in the id that is passed in the url
+        //return single movie - matches the ObjectId from mongodb to the id passed in the url
         movieCollection.findOne({'_id' : ObjectId(req.params.id)}, function(err, movie) {
 
             //response with an error if there is any
@@ -72,6 +60,7 @@ router.get('/movies/:id', function(req, res) {
             res.json(movie);
         });
 
+        //close the connection
         db.close();
     });
 });
@@ -124,7 +113,7 @@ router.put('/movies/:id', function(req, res) {
         //req.body - contains key-value pairs of data submitted in the form.
         var movie = req.body;
 
-        //update single movie where _id is equal to ObjectId from mongodb and pass in the id that is passed in the url
+        //update single movie - matches the ObjectId from mongodb to the id passed in the url
         movieCollection.update({'_id' : ObjectId(req.params.id)}, movie, function(err, movie) {
 
             //response with an error if there is any
@@ -152,7 +141,7 @@ router.delete('/movies/:id', function(req, res) {
         //using the movie collection
         var movieCollection = db.collection('movies');
 
-        //remove single movie where _id is equal to ObjectId from mongodb and pass in the id that is passed in the url
+        //remove single movie - matches the ObjectId from mongodb to the id passed in the url
         movieCollection.remove({'_id' : ObjectId(req.params.id)}, function(err, movie) {
 
             //response with an error if there is any
@@ -163,9 +152,9 @@ router.delete('/movies/:id', function(req, res) {
 
             //response with json format
             res.json({"message": "movie deleted"});
-
-            db.close();
         });
+
+        db.close();
     });
 });
 
